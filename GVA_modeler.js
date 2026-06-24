@@ -40,6 +40,12 @@ async function checkAuth() {
     if (decryptedHtml && decryptedHtml.includes('id="app-main"')) {
       loginOverlay.classList.add('hidden');
       appRoot.innerHTML = decryptedHtml;
+      
+      const appMain = document.getElementById('app-main');
+      if (appMain) {
+        appMain.style.display = 'block';
+      }
+      
       initializeDashboard();
       return;
     }
