@@ -118,7 +118,7 @@ let baseYear;
 let yr1, yr2, yr3;
 let labels;
 let scenario1, scenario2;
-let refreshProfit1, refreshProfit2;
+let refreshProfit1 = () => {}, refreshProfit2 = () => {};
 
 // Dynamic Base Year Shifting Logic
 function getBaseYear() {
