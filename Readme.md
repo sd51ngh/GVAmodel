@@ -8,12 +8,7 @@ The **GVA Scenario Modeler** is an interactive web-based playground designed to 
 
 To run the modeler locally:
 1. Open [index.html] in any web browser.
-2. Enter the credentials below to decrypt the secure dashboard.
-
-### Authentication Credentials
-Access to the dashboard is secured client-side using SHA-256 validation and XOR decryption via [handleLogin]
-* **Username**: 
-* **Password**: 
+2. Enter the credentials to access secure dashboard.
 
 ---
 
@@ -115,5 +110,4 @@ To ensure the financial and operational model remains logical, the **Comparison 
 
 * **Frontend**: Vanilla HTML5 structure, Vanilla CSS3 styling, and Vanilla ES6 JavaScript logic.
 * **Interactive Elements**: Custom inline SVG rendering with mouse/touch pointer events for dragging revenue points.
-* **Security & Decryption**: Password validation uses async Web Crypto API SHA-256 digest checks. The dashboard main interface is encrypted inside a base64 string (`ENCRYPTED_DASHBOARD`) and decrypted on-the-fly using a character-by-character XOR cipher
 * **Caching**: Utilizes `sessionStorage` to store table states, sidebar toggle states, and baseline configuration flags.
