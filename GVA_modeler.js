@@ -8,12 +8,12 @@ function xorDecrypt(base64Text, key) {
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-    
+
     const decryptedBytes = new Uint8Array(bytes.length);
     for (let i = 0; i < bytes.length; i++) {
       decryptedBytes[i] = bytes[i] ^ key.charCodeAt(i % key.length);
     }
-    
+
     return new TextDecoder().decode(decryptedBytes);
   } catch (e) {
     console.error("Decryption failed:", e);
@@ -33,24 +33,24 @@ async function checkAuth() {
   const key = sessionStorage.getItem('gva_key');
   const appRoot = document.getElementById('app-root');
   const loginOverlay = document.getElementById('loginOverlay');
-  
+
   if (isAuth && key) {
     const decryptedHtml = xorDecrypt(ENCRYPTED_DASHBOARD, key);
-    
+
     if (decryptedHtml && decryptedHtml.includes('id="app-main"')) {
       loginOverlay.classList.add('hidden');
       appRoot.innerHTML = decryptedHtml;
-      
+
       const appMain = document.getElementById('app-main');
       if (appMain) {
         appMain.style.display = 'block';
       }
-      
+
       initializeDashboard();
       return;
     }
   }
-  
+
   // Reset session storage if decryption failed or not authenticated
   sessionStorage.removeItem('gva_auth');
   sessionStorage.removeItem('gva_key');
@@ -65,10 +65,10 @@ async function handleLogin(event) {
   const passEl = document.getElementById('login-password');
   const errorEl = document.getElementById('loginError');
   const errorMsgEl = document.getElementById('loginErrorMsg');
-  
+
   const username = userEl.value.trim();
   const password = passEl.value;
-  
+
   // Clear previous error state
   userEl.style.borderColor = '';
   passEl.style.borderColor = '';
@@ -91,7 +91,7 @@ async function handleLogin(event) {
     errorEl.style.display = 'flex';
     userEl.style.borderColor = '#d9534f';
     passEl.style.borderColor = '#d9534f';
-    
+
     // Re-trigger shake animation
     errorEl.style.animation = 'none';
     errorEl.offsetHeight; // trigger reflow
@@ -102,14 +102,14 @@ async function handleLogin(event) {
 function handleLogout() {
   sessionStorage.removeItem('gva_auth');
   sessionStorage.removeItem('gva_key');
-  
+
   // Reset input fields in login form
   document.getElementById('login-username').value = '';
   document.getElementById('login-password').value = '';
   document.getElementById('loginError').style.display = 'none';
   document.getElementById('login-username').style.borderColor = '';
   document.getElementById('login-password').style.borderColor = '';
-  
+
   checkAuth();
 }
 
@@ -118,7 +118,7 @@ let baseYear;
 let yr1, yr2, yr3;
 let labels;
 let scenario1, scenario2;
-let refreshProfit1 = () => {}, refreshProfit2 = () => {};
+let refreshProfit1 = () => { }, refreshProfit2 = () => { };
 let updateEmployee1;
 
 // Dynamic Base Year Shifting Logic
@@ -260,12 +260,12 @@ const COMP_KEYS = [
 
 function updateComparisonCalculations(e) {
   const targetId = e ? e.target.id : null;
-  
+
   const getValue = (id) => {
     const el = document.getElementById(id);
     return el && el.value !== '' ? Number(el.value) : null;
   };
-  
+
   const setValue = (id, val) => {
     const el = document.getElementById(id);
     if (el) el.value = val !== null ? val : '';
@@ -365,14 +365,14 @@ function calculateProductivityGains(revenues, counts) {
     const count = counts[i] || 0;
     prods.push(count ? (rev / count) : 0);
   }
-  
+
   const gains = [];
   for (let i = 1; i < 4; i++) {
     const prev = prods[i - 1];
     const curr = prods[i];
     const diff = curr - prev;
     const pct = prev ? (diff / prev) * 100 : 0;
-    
+
     const sign = diff > 0 ? '+' : '';
     const formattedDiff = (diff < 0 ? '-' : sign) + '£' + Math.abs(diff).toFixed(2) + 'k';
     const formattedPct = (pct > 0 ? '+' : '') + pct.toFixed(1) + '%';
@@ -432,7 +432,7 @@ function createScenarioChart({ svgId, summaryId, title, series, onUpdate }) {
       ${(i === 0 && !isChart2) ? `
         <div style="display: flex; align-items: center; gap: 2px;">
           <span style="font-size: 0.9rem; font-weight: 700;">£</span>
-          <input type="number" id="revenue-input-${svgId}-${i}" value="${Math.round(d.value)}" style="width: 100px; font: inherit; font-size: 0.9rem; font-weight: 700; padding: 2px; border: 1px solid var(--border); border-radius: 6px; text-align: right; color: var(--accent);">
+          <input type="number" id="revenue-input-${svgId}-${i}" value="${Math.round(d.value)}" style="width: 80%; font: inherit; font-size: 0.9rem; font-weight: 700; padding: 2px; border: 1px solid var(--border); border-radius: 6px; text-align: right; color: var(--accent);">
           <span style="font-size: 0.9rem; font-weight: 700;">k</span>
         </div>
       ` : `
@@ -1257,8 +1257,8 @@ function runComparisonSanityChecks() {
   }
 
   if (valAlignmentCost) {
-    valAlignmentCost.textContent = (s1EmpBaselineCost === s2EmpBaselineCost && s1EmpBaselineCost === mainEmpCostBase) 
-      ? 'Perfect Match' 
+    valAlignmentCost.textContent = (s1EmpBaselineCost === s2EmpBaselineCost && s1EmpBaselineCost === mainEmpCostBase)
+      ? 'Perfect Match'
       : `${s1EmpBaselineCost === s2EmpBaselineCost ? 'S1=S2' : 'S1≠S2'} (Main: £${mainEmpCostBase}k)`;
     valAlignmentCost.style.color = (s1EmpBaselineCost === s2EmpBaselineCost && s1EmpBaselineCost === mainEmpCostBase) ? 'var(--accent)' : '#b45309';
   }
@@ -1491,19 +1491,19 @@ function handleExport() {
   csv.push('"Model Inputs"');
   csv.push('"Parameter","Base","Y1","Y2","Y3"');
   csv.push(`"Base Year",${baseYear},,,`);
-  
+
   const s1Data = scenario1.getData();
   csv.push(`"S1 Revenue",${s1Data.map(d => d.value).join(',')}`);
-  
+
   const s2Data = scenario2.getData();
   csv.push(`"S2 Revenue",${s2Data.map(d => d.value).join(',')}`);
-  
+
   const s1Margins = [0, 1, 2, 3].map(i => refreshProfit1.rawMargins[i]);
   csv.push(`"S1 Profit Margin %",${s1Margins.join(',')}`);
-  
+
   const s2Margins = [0, 1, 2, 3].map(i => refreshProfit2.rawMargins[i]);
   csv.push(`"S2 Profit Margin %",${s2Margins.join(',')}`);
-  
+
   const s1Emp = [
     document.getElementById('emp1-baseline').value,
     document.getElementById('emp1-y1').value,
@@ -1511,19 +1511,19 @@ function handleExport() {
     document.getElementById('emp1-y3').value
   ];
   csv.push(`"S1 Employee Count",${s1Emp.join(',')}`);
-  
+
   const s1EmpCost = document.getElementById('emp1-cost').value;
   csv.push(`"Baseline Employee Cost",${s1EmpCost},,,`);
-  
+
   const projCost = document.getElementById('project-cost-input').value;
   csv.push(`"Project Cost",${projCost},,,`);
-  
+
   const s2Upskilled = [1, 2, 3].map(i => document.getElementById(`upskilled-y${i}`).value);
   csv.push(`"S2 Upskilled Count",${s2Upskilled.join(',')},`);
-  
+
   const s2SkillsNotes = [1, 2, 3].map(i => '"' + document.getElementById(`skills-note-y${i}`).value.replace(/"/g, '""') + '"');
   csv.push(`"S2 Skills Notes",${s2SkillsNotes.join(',')},`);
-  
+
   for (let b = 0; b < 6; b++) {
     const bandVals = [1, 2, 3].map(yrIdx => {
       const input = document.querySelector(`.band-input[data-band="${b}"][data-year-idx="${yrIdx}"]`);
@@ -1558,7 +1558,7 @@ function handleImportChange(e) {
     try {
       const contents = evt.target.result;
       const rows = parseCSV(contents);
-      
+
       let inputsStartIdx = -1;
       for (let i = 0; i < rows.length; i++) {
         if (rows[i][0] && rows[i][0].trim() === 'Model Inputs') {
@@ -1583,9 +1583,9 @@ function handleImportChange(e) {
       }
 
       const requiredKeys = [
-        'Base Year', 'S1 Revenue', 'S2 Revenue', 
-        'S1 Profit Margin %', 'S2 Profit Margin %', 
-        'S1 Employee Count', 'Baseline Employee Cost', 'Project Cost', 
+        'Base Year', 'S1 Revenue', 'S2 Revenue',
+        'S1 Profit Margin %', 'S2 Profit Margin %',
+        'S1 Employee Count', 'Baseline Employee Cost', 'Project Cost',
         'S2 Upskilled Count', 'S2 Skills Notes'
       ];
       for (const key of requiredKeys) {
@@ -1671,11 +1671,11 @@ function parseCSV(text) {
   const lines = [];
   let row = [""];
   let inQuotes = false;
-  
+
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
-    const next = text[i+1];
-    
+    const next = text[i + 1];
+
     if (inQuotes) {
       if (c === '"') {
         if (next === '"') {
@@ -1878,18 +1878,18 @@ function copySummaryToComparison() {
     const s1Prof = document.getElementById(`comp-s1-prof-${col}`);
     const s2Emp = document.getElementById(`comp-s2-emp-${col}`);
     const s2Prof = document.getElementById(`comp-s2-prof-${col}`);
-    
+
     if (s1Emp) s1Emp.value = Number((employeeCostK.s1[i] || 0).toFixed(2));
     if (s1Prof) s1Prof.value = Number((netProfitK.s1[i] || 0).toFixed(2));
     if (s2Emp) s2Emp.value = Number((employeeCostK.s2[i] || 0).toFixed(2));
     if (s2Prof) s2Prof.value = Number((netProfitK.s2[i] || 0).toFixed(2));
   });
-  
+
   const projCostEl = document.getElementById('project-cost-input');
   const compProjCostEl = document.getElementById('comp-project-cost');
   if (projCostEl && compProjCostEl) {
     compProjCostEl.value = projCostEl.value;
   }
-  
+
   updateComparisonCalculations();
 }
