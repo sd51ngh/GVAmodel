@@ -564,6 +564,38 @@ table.summary-table {
   transform: scale(0.96);
 }
 
+.custom-yoy-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.custom-yoy-input {
+  width: 60px;
+  padding: 4px 6px;
+  font-size: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: right;
+  color: var(--accent);
+  background: var(--surface);
+  transition: all 0.2s;
+}
+
+.custom-yoy-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--line-soft);
+}
+
+.custom-yoy-suffix {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
 /* Modal / Popup Styles */
 .modal-overlay {
   position: fixed;
