@@ -700,31 +700,29 @@ function createProfitControls({ containerId, scenarioKey, scenarioName, defaultP
       const amountInput = document.getElementById(`${containerId}-amount-input-${i}`);
       const revenue = data[i].value;
 
-      let pct;
-      let profitK;
+      const addedSalaryCost = i > 0 ? (employeeCostK[scenarioKey][i] || 0) - (employeeCostK[scenarioKey][0] || 0) : 0;
+      const salaryPctOffset = revenue ? (addedSalaryCost / revenue) * 100 : 0;
+
+      let rawPct;
 
       if (amountInput && sourceId === amountInput.id) {
-        profitK = Number(amountInput.value);
-        pct = revenue ? (profitK / revenue) * 100 : 0;
-        pct = Math.round(pct * 100) / 100;
-        rawMargins[i] = pct;
+        const profitK = Number(amountInput.value);
+        const adjustedPct = revenue ? (profitK / revenue) * 100 : 0;
+        rawPct = adjustedPct + salaryPctOffset;
+        rawMargins[i] = rawPct;
       } else if (slider && sourceId === slider.id) {
-        pct = Number(slider.value);
-        rawMargins[i] = pct;
+        const adjustedPct = Number(slider.value);
+        rawPct = adjustedPct + salaryPctOffset;
+        rawMargins[i] = rawPct;
       } else if (percentInput && sourceId === percentInput.id) {
-        pct = Number(percentInput.value);
-        rawMargins[i] = pct;
+        const adjustedPct = Number(percentInput.value);
+        rawPct = adjustedPct + salaryPctOffset;
+        rawMargins[i] = rawPct;
       } else {
-        pct = rawMargins[i];
+        rawPct = rawMargins[i];
       }
 
-      profitK = revenue * (pct / 100);
-
-      let addedSalaryCost = 0;
-      if (i > 0) {
-        addedSalaryCost = (employeeCostK[scenarioKey][i] || 0) - (employeeCostK[scenarioKey][0] || 0);
-        profitK -= addedSalaryCost;
-      }
+      let profitK = revenue * (rawPct / 100) - addedSalaryCost;
 
       const adjustedPct = revenue ? (profitK / revenue) * 100 : 0;
       const roundedAdjustedPct = Math.round(adjustedPct * 100) / 100;
