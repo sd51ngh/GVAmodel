@@ -1039,3 +1039,14 @@ table.summary-table {
 .info-btn:active {
   transform: scale(0.95);
 }
+
+/* Collapsible Section Header hover effects */
+.section-header:hover h2 {
+  color: var(--accent);
+}
+
+.section-header:hover #comparison-collapse-icon {
+  background: var(--accent) !important;
+  color: white !important;
+  transform: scale(1.08);
+}
