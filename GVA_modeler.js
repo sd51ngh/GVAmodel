@@ -729,20 +729,26 @@ function createProfitControls({ containerId, scenarioKey, scenarioName, defaultP
       <div class="profit-head">
         <div class="profit-label">${year} net profit as % of revenue</div>
         <div style="display: flex; align-items: center; gap: 2px;">
-          <input type="number" class="profit-percent-input" id="${containerId}-percent-input-${i}" value="${defaultPercents[i]}" step="0.01" style="width: 65px; text-align: right; border: 1px solid var(--border); border-radius: 6px; padding: 4px; font-size: 0.95rem; font-weight: 700; color: var(--accent); font-family: inherit;" ${i === 0 ? 'readonly style="background: #fafaf9; border-color: transparent;"' : ''}>
+          ${(i === 0 && scenarioKey === 's2') ? `
+            <span id="${containerId}-percent-display-${i}" style="font-size: 0.95rem; font-weight: 700; color: var(--accent); font-family: inherit;">${defaultPercents[i]}</span>
+          ` : `
+            <input type="number" class="profit-percent-input" id="${containerId}-percent-input-${i}" value="${defaultPercents[i]}" step="0.01" style="width: 65px; text-align: right; border: 1px solid var(--border); border-radius: 6px; padding: 4px; font-size: 0.95rem; font-weight: 700; color: var(--accent); font-family: inherit;" ${i === 0 ? 'readonly style="background: #fafaf9; border-color: transparent;"' : ''}>
+          `}
           <span class="profit-percent">%</span>
         </div>
       </div>
       ${i === 0 ? '' : `<input class="profit-slider" id="${containerId}-slider-${i}" type="range" min="-100" max="80" step="1" value="${defaultPercents[i]}" aria-label="${scenarioName} ${year} net profit percentage">`}
       <div class="profit-number">
         <span style="margin-right: 4px;">Net profit value:</span>
-        ${i === 0 ? `
+        ${(i === 0 && scenarioKey === 's2') ? `
+          <span id="${containerId}-value-${i}" style="color: var(--text); font-weight: 600;"></span>
+        ` : (i === 0 ? `
           <div style="display: inline-flex; align-items: center; gap: 2px; vertical-align: middle;">
             <span style="color: var(--text);">£</span>
             <input type="number" id="${containerId}-amount-input-${i}" style="width: 70px; text-align: right; border: 1px solid var(--border); border-radius: 6px; padding: 2px 4px; font-size: 0.92rem; font-family: inherit;">
             <span style="color: var(--text);">k</span>
           </div>
-        ` : `<span id="${containerId}-value-${i}" style="color: var(--text);"></span>`}
+        ` : `<span id="${containerId}-value-${i}" style="color: var(--text);"></span>`)}
       </div>
     </div>
   `).join('');
@@ -752,6 +758,7 @@ function createProfitControls({ containerId, scenarioKey, scenarioName, defaultP
     years.forEach((year, i) => {
       const slider = document.getElementById(`${containerId}-slider-${i}`);
       const percentInput = document.getElementById(`${containerId}-percent-input-${i}`);
+      const percentDisplay = document.getElementById(`${containerId}-percent-display-${i}`);
       const valueSpan = document.getElementById(`${containerId}-value-${i}`);
       const amountInput = document.getElementById(`${containerId}-amount-input-${i}`);
       const revenue = data[i].value;
@@ -785,6 +792,9 @@ function createProfitControls({ containerId, scenarioKey, scenarioName, defaultP
 
       if (percentInput && sourceId !== percentInput.id) {
         percentInput.value = roundedAdjustedPct;
+      }
+      if (percentDisplay) {
+        percentDisplay.textContent = roundedAdjustedPct.toFixed(2);
       }
       if (slider && sourceId !== slider.id) {
         slider.value = Math.round(adjustedPct);
