@@ -30,31 +30,26 @@ async function sha256(message) {
 
 async function checkAuth() {
   const isAuth = sessionStorage.getItem('gva_auth') === 'true';
-  const key = sessionStorage.getItem('gva_key');
-  const appRoot = document.getElementById('app-root');
   const loginOverlay = document.getElementById('loginOverlay');
 
-  if (isAuth && key) {
-    const decryptedHtml = xorDecrypt(ENCRYPTED_DASHBOARD, key);
-
-    if (decryptedHtml && decryptedHtml.includes('id="app-main"')) {
-      loginOverlay.classList.add('hidden');
-      appRoot.innerHTML = decryptedHtml;
-
-      const appMain = document.getElementById('app-main');
-      if (appMain) {
-        appMain.style.display = 'block';
-      }
-
-      initializeDashboard();
-      return;
+  if (isAuth) {
+    loginOverlay.classList.add('hidden');
+    const appMain = document.getElementById('app-main');
+    if (appMain) {
+      appMain.style.display = 'block';
     }
+
+    initializeDashboard();
+    return;
   }
 
-  // Reset session storage if decryption failed or not authenticated
+  // Reset session storage if not authenticated
   sessionStorage.removeItem('gva_auth');
   sessionStorage.removeItem('gva_key');
-  appRoot.innerHTML = '';
+  const appMain = document.getElementById('app-main');
+  if (appMain) {
+    appMain.style.display = 'none';
+  }
   loginOverlay.classList.remove('hidden');
   document.getElementById('login-username').focus();
 }
@@ -755,6 +750,9 @@ function createProfitControls({ containerId, scenarioKey, scenarioName, defaultP
 
   function refresh(sourceId) {
     const data = getScenarioData();
+    const toggleEl = document.getElementById(`payroll-adj-toggle-${scenarioKey}`);
+    const applyAdjustment = toggleEl ? toggleEl.checked : true;
+
     years.forEach((year, i) => {
       const slider = document.getElementById(`${containerId}-slider-${i}`);
       const percentInput = document.getElementById(`${containerId}-percent-input-${i}`);
@@ -763,7 +761,7 @@ function createProfitControls({ containerId, scenarioKey, scenarioName, defaultP
       const amountInput = document.getElementById(`${containerId}-amount-input-${i}`);
       const revenue = data[i].value;
 
-      const addedSalaryCost = i > 0 ? (employeeCostK[scenarioKey][i] || 0) - (employeeCostK[scenarioKey][0] || 0) : 0;
+      const addedSalaryCost = (applyAdjustment && i > 0) ? (employeeCostK[scenarioKey][i] || 0) - (employeeCostK[scenarioKey][0] || 0) : 0;
       const salaryPctOffset = revenue ? (addedSalaryCost / revenue) * 100 : 0;
 
       let rawPct;
@@ -831,6 +829,11 @@ function createProfitControls({ containerId, scenarioKey, scenarioName, defaultP
       amountInput.addEventListener('input', (e) => refresh(e.target.id));
     }
   });
+
+  const toggleEl = document.getElementById(`payroll-adj-toggle-${scenarioKey}`);
+  if (toggleEl) {
+    toggleEl.addEventListener('change', () => refresh());
+  }
 
   refresh();
   return refresh;
@@ -1584,6 +1587,12 @@ function handleExport() {
   const projCost = document.getElementById('project-cost-input').value;
   csv.push(`"Project Cost",${projCost},,,`);
 
+  const s1PayrollAdj = document.getElementById('payroll-adj-toggle-s1').checked ? 'true' : 'false';
+  csv.push(`"S1 Payroll Adjustment Enabled",${s1PayrollAdj},,,`);
+
+  const s2PayrollAdj = document.getElementById('payroll-adj-toggle-s2').checked ? 'true' : 'false';
+  csv.push(`"S2 Payroll Adjustment Enabled",${s2PayrollAdj},,,`);
+
   const s2Upskilled = [1, 2, 3].map(i => document.getElementById(`upskilled-y${i}`).value);
   csv.push(`"S2 Upskilled Count",${s2Upskilled.join(',')},`);
 
@@ -1714,6 +1723,15 @@ function handleImportChange(e) {
       for (let i = 0; i < 4; i++) {
         refreshProfit1.rawMargins[i] = s1Margins[i];
         refreshProfit2.rawMargins[i] = s2Margins[i];
+      }
+
+      const checkboxS1 = document.getElementById('payroll-adj-toggle-s1');
+      if (checkboxS1) {
+        checkboxS1.checked = params['S1 Payroll Adjustment Enabled'] ? (params['S1 Payroll Adjustment Enabled'][0] === 'true') : true;
+      }
+      const checkboxS2 = document.getElementById('payroll-adj-toggle-s2');
+      if (checkboxS2) {
+        checkboxS2.checked = params['S2 Payroll Adjustment Enabled'] ? (params['S2 Payroll Adjustment Enabled'][0] === 'true') : true;
       }
 
       refreshProfit1();
