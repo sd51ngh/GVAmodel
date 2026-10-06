@@ -175,6 +175,7 @@ const employeeCostK = {
 };
 
 function formatCurrencyK(k) {
+  if (isNaN(k) || !isFinite(k)) return '£0';
   const full = Math.round(k * 1000);
   return (full < 0 ? '-' : '') + '£' + Math.abs(full).toLocaleString();
 }
@@ -235,7 +236,10 @@ function updateSummaryTable() {
   const projectCost = projectCostInput ? Number(projectCostInput.value) : 0;
   const totalGva = totalGvaY1toY3 + projectCost;
 
-  animateGvaValue('total-gva', totalGva);
+  const totalGvaEl = document.getElementById('total-gva');
+  if (totalGvaEl) {
+    totalGvaEl.textContent = formatCurrencyK(totalGva);
+  }
   if (typeof runComparisonSanityChecks === 'function') {
     runComparisonSanityChecks();
   }
@@ -397,42 +401,11 @@ function toggleComparisonSection() {
 function animateGvaValue(elementId, endK) {
   const element = document.getElementById(elementId);
   if (!element) return;
-  
-  let startK = 0;
-  const currentText = element.textContent;
-  if (currentText && currentText !== '–' && currentText !== '-') {
-    const numericStr = currentText.replace(/[^\d.-]/g, '');
-    const isNegative = currentText.includes('-');
-    if (numericStr) {
-      startK = Number(numericStr) / 1000 * (isNegative ? -1 : 1);
-    }
-  }
-  
-  if (startK === endK) {
-    element.textContent = formatCurrencyK(endK);
+  if (isNaN(endK) || !isFinite(endK)) {
+    element.textContent = '£0';
     return;
   }
-  
-  element.dataset.targetK = endK;
-  const duration = 400; // ms
-  const startTime = performance.now();
-  
-  function step(currentTime) {
-    if (element.dataset.targetK !== String(endK)) return;
-    
-    const elapsed = currentTime - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const ease = progress * (2 - progress); // Ease-out quad
-    
-    const currentK = startK + (endK - startK) * ease;
-    element.textContent = formatCurrencyK(currentK);
-    
-    if (progress < 1) {
-      requestAnimationFrame(step);
-    }
-  }
-  
-  requestAnimationFrame(step);
+  element.textContent = formatCurrencyK(endK);
 }
 
 function createScenarioChart({ svgId, summaryId, title, series, onUpdate }) {
@@ -759,50 +732,49 @@ function createProfitControls({ containerId, scenarioKey, scenarioName, defaultP
       const percentDisplay = document.getElementById(`${containerId}-percent-display-${i}`);
       const valueSpan = document.getElementById(`${containerId}-value-${i}`);
       const amountInput = document.getElementById(`${containerId}-amount-input-${i}`);
-      const revenue = data[i].value;
+      const revenue = data[i].value || 1;
 
       const addedSalaryCost = (applyAdjustment && i > 0) ? (employeeCostK[scenarioKey][i] || 0) - (employeeCostK[scenarioKey][0] || 0) : 0;
-      const salaryPctOffset = revenue ? (addedSalaryCost / revenue) * 100 : 0;
+      const salaryPctOffset = (applyAdjustment && i > 0 && revenue) ? (addedSalaryCost / revenue) * 100 : 0;
 
-      let rawPct;
+      let baseMarginPct;
 
       if (amountInput && sourceId === amountInput.id) {
-        const profitK = Number(amountInput.value);
+        const profitK = Number(amountInput.value) || 0;
         const adjustedPct = revenue ? (profitK / revenue) * 100 : 0;
-        rawPct = adjustedPct + salaryPctOffset;
-        rawMargins[i] = rawPct;
+        baseMarginPct = adjustedPct + salaryPctOffset;
+        rawMargins[i] = baseMarginPct;
       } else if (slider && sourceId === slider.id) {
-        const adjustedPct = Number(slider.value);
-        rawPct = adjustedPct + salaryPctOffset;
-        rawMargins[i] = rawPct;
+        const adjustedPct = Number(slider.value) || 0;
+        baseMarginPct = adjustedPct + salaryPctOffset;
+        rawMargins[i] = baseMarginPct;
       } else if (percentInput && sourceId === percentInput.id) {
-        const adjustedPct = Number(percentInput.value);
-        rawPct = adjustedPct + salaryPctOffset;
-        rawMargins[i] = rawPct;
+        const adjustedPct = Number(percentInput.value) || 0;
+        baseMarginPct = adjustedPct + salaryPctOffset;
+        rawMargins[i] = baseMarginPct;
       } else {
-        rawPct = rawMargins[i];
+        baseMarginPct = rawMargins[i];
       }
 
-      let profitK = revenue * (rawPct / 100) - addedSalaryCost;
-
+      const profitK = revenue * (baseMarginPct / 100) - addedSalaryCost;
       const adjustedPct = revenue ? (profitK / revenue) * 100 : 0;
       const roundedAdjustedPct = Math.round(adjustedPct * 100) / 100;
 
       if (percentInput && sourceId !== percentInput.id) {
-        percentInput.value = roundedAdjustedPct;
+        percentInput.value = applyAdjustment ? roundedAdjustedPct : Math.round(baseMarginPct * 100) / 100;
       }
       if (percentDisplay) {
-        percentDisplay.textContent = roundedAdjustedPct.toFixed(2);
+        percentDisplay.textContent = (applyAdjustment ? roundedAdjustedPct : baseMarginPct).toFixed(2);
       }
       if (slider && sourceId !== slider.id) {
-        slider.value = Math.round(adjustedPct);
+        slider.value = Math.round(applyAdjustment ? adjustedPct : baseMarginPct);
       }
       if (amountInput && sourceId !== amountInput.id) {
         amountInput.value = Number(profitK.toFixed(2));
       }
 
       if (valueSpan) {
-        if (i > 0 && addedSalaryCost > 0) {
+        if (i > 0 && applyAdjustment && addedSalaryCost > 0) {
           valueSpan.innerHTML = `${formatCurrencyK(profitK)} <span style="font-size: 0.8rem; color: #d9534f; font-weight: 600; margin-left: 6px;">(-${formatCurrencyK(addedSalaryCost)} payroll adjustment)</span>`;
         } else {
           valueSpan.textContent = formatCurrencyK(profitK);
@@ -890,9 +862,11 @@ function createEmployeeLogic(prefix, scenarioKey) {
     lastY2 = Number(y2Input.value) || 0;
     lastY3 = Number(y3Input.value) || 0;
 
-    const costPerEmployee = Math.max(0, Number(costInput.value / baselineInput.value) || 0);
+    const baseCount = Math.max(0, Number(baselineInput.value) || 0);
+    const baseCost = Math.max(0, Number(costInput.value) || 0);
+    const costPerEmployee = baseCount > 0 ? Math.max(0, baseCost / baseCount) : 0;
     const counts = [
-      Math.max(0, Number(baselineInput.value) || 0),
+      baseCount,
       Math.max(0, Number(y1Input.value) || 0),
       Math.max(0, Number(y2Input.value) || 0),
       Math.max(0, Number(y3Input.value) || 0)
@@ -903,11 +877,12 @@ function createEmployeeLogic(prefix, scenarioKey) {
       `Annual employee cost: Base ${formatCurrencyK(annualCosts[0])}, ${yr1} ${formatCurrencyK(annualCosts[1])}, ${yr2} ${formatCurrencyK(annualCosts[2])}, ${yr3} ${formatCurrencyK(annualCosts[3])}`;
 
     employeeCostK[scenarioKey] = annualCosts;
-    const refreshProfit = scenarioKey === 's1' ? refreshProfit1 : refreshProfit2;
-    if (typeof refreshProfit === 'function') {
-      refreshProfit();
+    if (scenarioKey === 's1') {
+      if (typeof refreshProfit1 === 'function') refreshProfit1();
+      if (typeof updateEmployee2 === 'function') updateEmployee2();
     } else {
-      updateSummaryTable();
+      if (typeof refreshProfit2 === 'function') refreshProfit2();
+      else updateSummaryTable();
     }
   }
 
@@ -946,16 +921,30 @@ function updateEmployee2() {
   });
 
   for (let i = 0; i < 6; i++) {
-    document.getElementById(`band-total-${i}`).textContent = bandTotals[i];
+    const bandTotalEl = document.getElementById(`band-total-${i}`);
+    if (bandTotalEl) bandTotalEl.textContent = bandTotals[i];
   }
 
   let grandTotalNewJobs = 0;
   let cumulativeNewJobs = 0;
+  const cumulativeBandNewJobs = [0, 0, 0];
+  const cumulativeBandCost = [0, 0, 0];
+  let currentCumulativeCost = 0;
+
   for (let idx = 1; idx <= 3; idx++) {
     const colTotal = newJobsByYear[idx - 1];
     cumulativeNewJobs += colTotal;
-    document.getElementById(`band-col-total-y${idx}`).textContent = colTotal;
-    document.getElementById(`forecast-new-y${idx}`).textContent = colTotal;
+    cumulativeBandNewJobs[idx - 1] = cumulativeNewJobs;
+
+    currentCumulativeCost += costAddedByYear[idx - 1];
+    cumulativeBandCost[idx - 1] = currentCumulativeCost;
+
+    const colTotalEl = document.getElementById(`band-col-total-y${idx}`);
+    if (colTotalEl) colTotalEl.textContent = colTotal;
+
+    const forecastNewEl = document.getElementById(`forecast-new-y${idx}`);
+    if (forecastNewEl) forecastNewEl.textContent = colTotal;
+
     grandTotalNewJobs += colTotal;
 
     const c1Input = document.getElementById(`emp1-y${idx}`);
@@ -965,27 +954,38 @@ function updateEmployee2() {
       c2Input.value = c1 + cumulativeNewJobs;
     }
   }
-  document.getElementById('band-grand-total').textContent = grandTotalNewJobs;
-  document.getElementById('forecast-new-total').textContent = grandTotalNewJobs;
+
+  const grandTotalEl = document.getElementById('band-grand-total');
+  if (grandTotalEl) grandTotalEl.textContent = grandTotalNewJobs;
+
+  const forecastTotalEl = document.getElementById('forecast-new-total');
+  if (forecastTotalEl) forecastTotalEl.textContent = grandTotalNewJobs;
 
   let grandTotalUpskilled = 0;
   for (let idx = 1; idx <= 3; idx++) {
-    const val = Math.max(0, parseInt(document.getElementById(`upskilled-y${idx}`).value) || 0);
+    const upskilledEl = document.getElementById(`upskilled-y${idx}`);
+    const val = upskilledEl ? Math.max(0, parseInt(upskilledEl.value) || 0) : 0;
     grandTotalUpskilled += val;
   }
-  document.getElementById('upskilled-total').textContent = grandTotalUpskilled;
+  const upskilledTotalEl = document.getElementById('upskilled-total');
+  if (upskilledTotalEl) upskilledTotalEl.textContent = grandTotalUpskilled;
 
   const counts = [baselineCount];
   const costs = [baselineCost];
 
-  counts.push(counts[0] + newJobsByYear[0]);
-  costs.push(costs[0] + costAddedByYear[0]);
+  for (let idx = 1; idx <= 3; idx++) {
+    const c1Input = document.getElementById(`emp1-y${idx}`);
+    const c1Count = c1Input ? Math.max(0, parseInt(c1Input.value) || 0) : baselineCount;
 
-  counts.push(counts[1] + newJobsByYear[1]);
-  costs.push(costs[1] + costAddedByYear[1]);
+    const s2Count = c1Count + cumulativeBandNewJobs[idx - 1];
+    counts.push(s2Count);
 
-  counts.push(counts[2] + newJobsByYear[2]);
-  costs.push(costs[2] + costAddedByYear[2]);
+    const s1Cost = (employeeCostK.s1 && employeeCostK.s1[idx] !== undefined)
+      ? employeeCostK.s1[idx]
+      : (c1Count * baselineAvgSalary);
+    const s2Cost = s1Cost + cumulativeBandCost[idx - 1];
+    costs.push(s2Cost);
+  }
 
   const revenues = scenario2 ? scenario2.getData().map(d => d.value) : [0, 0, 0, 0];
   const prodGainsHtml = calculateProductivityGains(revenues, counts);
@@ -1868,7 +1868,6 @@ function initializeDashboard() {
   });
   ['1', '2', '3'].forEach(idx => {
     document.getElementById(`upskilled-y${idx}`).addEventListener('input', updateEmployee2);
-    document.getElementById(`emp1-y${idx}`).addEventListener('input', () => syncCountToBands(idx));
     document.getElementById(`emp2-y${idx}`).addEventListener('input', () => syncCountToBands(idx));
   });
   document.getElementById('emp2-baseline').addEventListener('input', updateEmployee2);
