@@ -724,7 +724,7 @@ function createProfitControls({ containerId, scenarioKey, scenarioName, defaultP
   function refresh(sourceId) {
     const data = getScenarioData();
     const toggleEl = document.getElementById(`payroll-adj-toggle-${scenarioKey}`);
-    const applyAdjustment = toggleEl ? toggleEl.checked : true;
+    const applyAdjustment = toggleEl ? toggleEl.checked : false;
 
     years.forEach((year, i) => {
       const slider = document.getElementById(`${containerId}-slider-${i}`);
@@ -879,7 +879,7 @@ function createEmployeeLogic(prefix, scenarioKey) {
     employeeCostK[scenarioKey] = annualCosts;
     if (scenarioKey === 's1') {
       if (typeof refreshProfit1 === 'function') refreshProfit1();
-      if (typeof updateEmployee2 === 'function') updateEmployee2();
+      updateSummaryTable();
     } else {
       if (typeof refreshProfit2 === 'function') refreshProfit2();
       else updateSummaryTable();
@@ -896,13 +896,47 @@ function createEmployeeLogic(prefix, scenarioKey) {
 // Scenario 2 Custom Employment Logic
 const BAND_SALARIES = [15, 20.4, 30, 40, 50, 65]; // £k
 
-function updateEmployee2() {
+let lastBase2 = 0;
+let lastY1_2 = 0;
+let lastY2_2 = 0;
+let lastY3_2 = 0;
+
+function updateEmployee2(e) {
   const baselineInput = document.getElementById('emp2-baseline');
   const costInput = document.getElementById('emp2-cost');
+  const y1Input = document.getElementById('emp2-y1');
+  const y2Input = document.getElementById('emp2-y2');
+  const y3Input = document.getElementById('emp2-y3');
   const metric = document.getElementById('emp2-metric');
 
-  const baselineCount = Math.max(0, Number(baselineInput.value) || 0);
-  const baselineCost = Math.max(0, Number(costInput.value) || 0);
+  if (e && e.isTrusted && e.target) {
+    const target = e.target;
+    if (target === baselineInput) {
+      const val = Number(baselineInput.value) || 0;
+      const delta = val - lastBase2;
+      if (delta !== 0) {
+        if (y1Input) y1Input.value = Math.max(0, (Number(y1Input.value) || 0) + delta);
+        if (y2Input) y2Input.value = Math.max(0, (Number(y2Input.value) || 0) + delta);
+        if (y3Input) y3Input.value = Math.max(0, (Number(y3Input.value) || 0) + delta);
+      }
+    } else if (target === y1Input) {
+      const val = Number(y1Input.value) || 0;
+      const delta = val - lastY1_2;
+      if (delta !== 0) {
+        if (y2Input) y2Input.value = Math.max(0, (Number(y2Input.value) || 0) + delta);
+        if (y3Input) y3Input.value = Math.max(0, (Number(y3Input.value) || 0) + delta);
+      }
+    } else if (target === y2Input) {
+      const val = Number(y2Input.value) || 0;
+      const delta = val - lastY2_2;
+      if (delta !== 0) {
+        if (y3Input) y3Input.value = Math.max(0, (Number(y3Input.value) || 0) + delta);
+      }
+    }
+  }
+
+  const baselineCount = Math.max(0, Number(baselineInput?.value) || 0);
+  const baselineCost = Math.max(0, Number(costInput?.value) || 0);
   const baselineAvgSalary = baselineCount ? (baselineCost / baselineCount) : 0;
 
   const newJobsByYear = [0, 0, 0]; // Y1, Y2, Y3 indices
@@ -946,13 +980,6 @@ function updateEmployee2() {
     if (forecastNewEl) forecastNewEl.textContent = colTotal;
 
     grandTotalNewJobs += colTotal;
-
-    const c1Input = document.getElementById(`emp1-y${idx}`);
-    const c2Input = document.getElementById(`emp2-y${idx}`);
-    if (c1Input && c2Input) {
-      const c1 = Math.max(0, parseInt(c1Input.value) || 0);
-      c2Input.value = c1 + cumulativeNewJobs;
-    }
   }
 
   const grandTotalEl = document.getElementById('band-grand-total');
@@ -974,18 +1001,22 @@ function updateEmployee2() {
   const costs = [baselineCost];
 
   for (let idx = 1; idx <= 3; idx++) {
-    const c1Input = document.getElementById(`emp1-y${idx}`);
-    const c1Count = c1Input ? Math.max(0, parseInt(c1Input.value) || 0) : baselineCount;
-
-    const s2Count = c1Count + cumulativeBandNewJobs[idx - 1];
+    const c2Input = document.getElementById(`emp2-y${idx}`);
+    const expectedHeadcount = baselineCount + cumulativeBandNewJobs[idx - 1];
+    if (c2Input && (!e || !e.isTrusted || !e.target || (e.target !== baselineInput && e.target !== y1Input && e.target !== y2Input && e.target !== y3Input))) {
+      c2Input.value = expectedHeadcount;
+    }
+    const s2Count = c2Input ? Math.max(0, parseInt(c2Input.value) || 0) : expectedHeadcount;
     counts.push(s2Count);
 
-    const s1Cost = (employeeCostK.s1 && employeeCostK.s1[idx] !== undefined)
-      ? employeeCostK.s1[idx]
-      : (c1Count * baselineAvgSalary);
-    const s2Cost = s1Cost + cumulativeBandCost[idx - 1];
+    const s2Cost = baselineCost + cumulativeBandCost[idx - 1] + Math.max(0, s2Count - baselineCount - cumulativeBandNewJobs[idx - 1]) * baselineAvgSalary;
     costs.push(s2Cost);
   }
+
+  lastBase2 = baselineCount;
+  lastY1_2 = counts[1];
+  lastY2_2 = counts[2];
+  lastY3_2 = counts[3];
 
   const revenues = scenario2 ? scenario2.getData().map(d => d.value) : [0, 0, 0, 0];
   const prodGainsHtml = calculateProductivityGains(revenues, counts);
@@ -1032,13 +1063,13 @@ function syncEmpBaseline(e, targetId) {
 }
 
 function syncCountToBands(yearIdx) {
-  const c1Input = document.getElementById(`emp1-y${yearIdx}`);
+  const base2Input = document.getElementById('emp2-baseline');
   const c2Input = document.getElementById(`emp2-y${yearIdx}`);
-  if (!c1Input || !c2Input) return;
+  if (!c2Input) return;
 
-  const c1 = Math.max(0, parseInt(c1Input.value) || 0);
+  const base2Count = Math.max(0, parseInt(base2Input?.value) || 0);
   const c2 = Math.max(0, parseInt(c2Input.value) || 0);
-  const targetDiff = Math.max(0, c2 - c1);
+  const targetDiff = Math.max(0, c2 - base2Count);
 
   let prevNewJobs = 0;
   for (let i = 1; i < yearIdx; i++) {
@@ -1167,8 +1198,19 @@ function handleApplyBaseline() {
   document.getElementById('emp1-y2').value = count;
   document.getElementById('emp1-y3').value = count;
 
+  const emp2Base = document.getElementById('emp2-baseline');
+  const emp2Cost = document.getElementById('emp2-cost');
+  if (emp2Base) emp2Base.value = count;
+  if (emp2Cost) emp2Cost.value = cost;
+
+  document.getElementById('emp2-y1').value = count;
+  document.getElementById('emp2-y2').value = count;
+  document.getElementById('emp2-y3').value = count;
+
   emp1Base.dispatchEvent(new Event('input'));
   emp1Cost.dispatchEvent(new Event('input'));
+  if (emp2Base) emp2Base.dispatchEvent(new Event('input'));
+  if (emp2Cost) emp2Cost.dispatchEvent(new Event('input'));
 
   const bandInputs = document.querySelectorAll('.band-input');
   bandInputs.forEach(input => {
@@ -1727,11 +1769,11 @@ function handleImportChange(e) {
 
       const checkboxS1 = document.getElementById('payroll-adj-toggle-s1');
       if (checkboxS1) {
-        checkboxS1.checked = params['S1 Payroll Adjustment Enabled'] ? (params['S1 Payroll Adjustment Enabled'][0] === 'true') : true;
+        checkboxS1.checked = params['S1 Payroll Adjustment Enabled'] ? (params['S1 Payroll Adjustment Enabled'][0] === 'true') : false;
       }
       const checkboxS2 = document.getElementById('payroll-adj-toggle-s2');
       if (checkboxS2) {
-        checkboxS2.checked = params['S2 Payroll Adjustment Enabled'] ? (params['S2 Payroll Adjustment Enabled'][0] === 'true') : true;
+        checkboxS2.checked = params['S2 Payroll Adjustment Enabled'] ? (params['S2 Payroll Adjustment Enabled'][0] === 'true') : false;
       }
 
       refreshProfit1();
@@ -1867,11 +1909,20 @@ function initializeDashboard() {
     input.addEventListener('input', updateEmployee2);
   });
   ['1', '2', '3'].forEach(idx => {
-    document.getElementById(`upskilled-y${idx}`).addEventListener('input', updateEmployee2);
-    document.getElementById(`emp2-y${idx}`).addEventListener('input', () => syncCountToBands(idx));
+    const upsk = document.getElementById(`upskilled-y${idx}`);
+    if (upsk) upsk.addEventListener('input', updateEmployee2);
+    const empInput = document.getElementById(`emp2-y${idx}`);
+    if (empInput) {
+      empInput.addEventListener('input', (e) => {
+        updateEmployee2(e);
+        syncCountToBands(idx);
+      });
+    }
   });
-  document.getElementById('emp2-baseline').addEventListener('input', updateEmployee2);
-  document.getElementById('emp2-cost').addEventListener('input', updateEmployee2);
+  const emp2Base = document.getElementById('emp2-baseline');
+  if (emp2Base) emp2Base.addEventListener('input', (e) => updateEmployee2(e));
+  const emp2Cost = document.getElementById('emp2-cost');
+  if (emp2Cost) emp2Cost.addEventListener('input', updateEmployee2);
 
   updateEmployee2();
 
@@ -1882,9 +1933,6 @@ function initializeDashboard() {
       setTimeout(syncProfitBaseline, 0);
     });
   }
-
-  document.getElementById('emp1-baseline').addEventListener('input', (e) => syncEmpBaseline(e, 'emp2-baseline'));
-  document.getElementById('emp1-cost').addEventListener('input', (e) => syncEmpBaseline(e, 'emp2-cost'));
 
   const pcInput = document.getElementById('project-cost-input');
   if (pcInput) pcInput.addEventListener('input', updateSummaryTable);

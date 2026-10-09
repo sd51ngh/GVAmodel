@@ -85,30 +85,34 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                   <div class="people-title" style="margin: 0;">Employees and cost (Scenario 1)</div>
                   <div style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 500; color: var(--muted);">
-                    <input type="checkbox" id="payroll-adj-toggle-s1" checked style="cursor: pointer; accent-color: var(--accent); width: 15px; height: 15px;">
+                    <input type="checkbox" id="payroll-adj-toggle-s1" style="cursor: pointer; accent-color: var(--accent); width: 15px; height: 15px;">
                     <label for="payroll-adj-toggle-s1" style="cursor: pointer; user-select: none;">Apply payroll adjustment</label>
                   </div>
                 </div>
                 <div class="people-inputs">
-                  <div class="field">
-                    <label for="emp1-baseline">Baseline employees count</label>
-                    <input id="emp1-baseline" type="number" min="1" step="1" value="50">
+                  <div class="people-row people-baseline-row">
+                    <div class="field">
+                      <label for="emp1-baseline">Baseline employees count</label>
+                      <input id="emp1-baseline" type="number" min="1" step="1" value="50">
+                    </div>
+                    <div class="field">
+                      <label for="emp1-cost">Baseline cost all employees (£k)</label>
+                      <input id="emp1-cost" type="number" min="0" step="1" value="1500">
+                    </div>
                   </div>
-                  <div class="field">
-                    <label for="emp1-cost">Baseline cost all employees (£k)</label>
-                    <input id="emp1-cost" type="number" min="0" step="1" value="1500">
-                  </div>
-                  <div class="field">
-                    <label for="emp1-y1"><span class="lbl-yr-1">Y1</span> employees</label>
-                    <input id="emp1-y1" type="number" min="0" step="1" value="55">
-                  </div>
-                  <div class="field">
-                    <label for="emp1-y2"><span class="lbl-yr-2">Y2</span> employees</label>
-                    <input id="emp1-y2" type="number" min="0" step="1" value="60">
-                  </div>
-                  <div class="field">
-                    <label for="emp1-y3"><span class="lbl-yr-3">Y3</span> employees</label>
-                    <input id="emp1-y3" type="number" min="0" step="1" value="65">
+                  <div class="people-row people-years-row">
+                    <div class="field">
+                      <label for="emp1-y1"><span class="lbl-yr-1">Y1</span> employees</label>
+                      <input id="emp1-y1" type="number" min="0" step="1" value="55">
+                    </div>
+                    <div class="field">
+                      <label for="emp1-y2"><span class="lbl-yr-2">Y2</span> employees</label>
+                      <input id="emp1-y2" type="number" min="0" step="1" value="60">
+                    </div>
+                    <div class="field">
+                      <label for="emp1-y3"><span class="lbl-yr-3">Y3</span> employees</label>
+                      <input id="emp1-y3" type="number" min="0" step="1" value="65">
+                    </div>
                   </div>
                 </div>
                 <div class="people-metric" id="emp1-metric">Average cost per employee: – | Annual employee cost by year: –
@@ -157,33 +161,35 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                   <div class="people-title" style="margin: 0;">Employees and cost (Scenario 2)</div>
                   <div style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 500; color: var(--muted);">
-                    <input type="checkbox" id="payroll-adj-toggle-s2" checked style="cursor: pointer; accent-color: var(--accent); width: 15px; height: 15px;">
+                    <input type="checkbox" id="payroll-adj-toggle-s2" style="cursor: pointer; accent-color: var(--accent); width: 15px; height: 15px;">
                     <label for="payroll-adj-toggle-s2" style="cursor: pointer; user-select: none;">Apply payroll adjustment</label>
                   </div>
                 </div>
 
                 <div class="people-inputs" style="margin-bottom: 16px;">
-                  <div class="field">
-                    <label for="emp2-baseline">Baseline employees count</label>
-                    <input id="emp2-baseline" type="number" min="1" step="1" value="50" disabled
-                      style="background: #fafaf9; border-color: transparent;">
+                  <div class="people-row people-baseline-row">
+                    <div class="field">
+                      <label for="emp2-baseline">Baseline employees count</label>
+                      <input id="emp2-baseline" type="number" min="1" step="1" value="50">
+                    </div>
+                    <div class="field">
+                      <label for="emp2-cost">Total salary cost (£k)</label>
+                      <input id="emp2-cost" type="number" min="0" step="1" value="1500">
+                    </div>
                   </div>
-                  <div class="field">
-                    <label for="emp2-cost">Total salary cost (£k)</label>
-                    <input id="emp2-cost" type="number" min="0" step="1" value="1500" disabled
-                      style="background: #fafaf9; border-color: transparent;">
-                  </div>
-                  <div class="field">
-                    <label for="emp2-y1"><span class="lbl-yr-1">Y1</span> employees</label>
-                    <input id="emp2-y1" type="number" min="0" step="1" value="55">
-                  </div>
-                  <div class="field">
-                    <label for="emp2-y2"><span class="lbl-yr-2">Y2</span> employees</label>
-                    <input id="emp2-y2" type="number" min="0" step="1" value="60">
-                  </div>
-                  <div class="field">
-                    <label for="emp2-y3"><span class="lbl-yr-3">Y3</span> employees</label>
-                    <input id="emp2-y3" type="number" min="0" step="1" value="65">
+                  <div class="people-row people-years-row">
+                    <div class="field">
+                      <label for="emp2-y1"><span class="lbl-yr-1">Y1</span> employees</label>
+                      <input id="emp2-y1" type="number" min="0" step="1" value="55">
+                    </div>
+                    <div class="field">
+                      <label for="emp2-y2"><span class="lbl-yr-2">Y2</span> employees</label>
+                      <input id="emp2-y2" type="number" min="0" step="1" value="60">
+                    </div>
+                    <div class="field">
+                      <label for="emp2-y3"><span class="lbl-yr-3">Y3</span> employees</label>
+                      <input id="emp2-y3" type="number" min="0" step="1" value="65">
+                    </div>
                   </div>
                 </div>
 
