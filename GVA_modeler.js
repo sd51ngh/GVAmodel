@@ -1919,10 +1919,31 @@ function initializeDashboard() {
       });
     }
   });
+  const emp1Base = document.getElementById('emp1-baseline');
+  const emp1Cost = document.getElementById('emp1-cost');
   const emp2Base = document.getElementById('emp2-baseline');
-  if (emp2Base) emp2Base.addEventListener('input', (e) => updateEmployee2(e));
   const emp2Cost = document.getElementById('emp2-cost');
+
+  if (emp2Base) emp2Base.addEventListener('input', (e) => updateEmployee2(e));
   if (emp2Cost) emp2Cost.addEventListener('input', updateEmployee2);
+
+  if (emp1Base && emp2Base) {
+    emp1Base.addEventListener('input', () => {
+      if (emp2Base.value !== emp1Base.value) {
+        emp2Base.value = emp1Base.value;
+        updateEmployee2({ target: emp2Base, isTrusted: true });
+      }
+    });
+  }
+
+  if (emp1Cost && emp2Cost) {
+    emp1Cost.addEventListener('input', () => {
+      if (emp2Cost.value !== emp1Cost.value) {
+        emp2Cost.value = emp1Cost.value;
+        updateEmployee2();
+      }
+    });
+  }
 
   updateEmployee2();
 
